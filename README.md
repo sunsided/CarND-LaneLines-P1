@@ -2,7 +2,7 @@
 
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-![Challenge input](./examples/lanelines_challenge.jpg)
+<a href="https://youtu.be/lw79wi2D53k">![Challenge input](./examples/lanelines_challenge.jpg)<a>
 
 ## Overview
 
@@ -42,29 +42,31 @@ the image is converted from RGB to [HSL](https://en.wikipedia.org/wiki/HSL_and_H
 To account for changes in illumination, the lightness channel is preprocessed using a adaptive histogram equalization ([CLAHE](https://en.wikipedia.org/wiki/Adaptive_histogram_equalization)), after which two
 separate masks for the yellow and white lines are generated and combined for the later stage.
 
-![Challenge input](./examples/writeup_thresh_yellow.png)
-![Challenge input](./examples/writeup_thresh_white.png)
+![Pipeline: Yellow mask](./examples/writeup_thresh_yellow.png)
+![Pipeline: White mask](./examples/writeup_thresh_white.png)
 
 After thresholding, a region of interest is masked out from the image by applying a trapezoid
 cut at the bottom half of the image. This follows the assumption that lane marks can always be found in the lower half
 of the image and follow a triangular shape with the tip close to the center of the image due to perspective.
 This assumption is somewhat limited in that steering action can (and will) break it, but it is an acceptable baseline to start with.
 
-![Challenge input](./examples/writeup_roi_mask.png)
+![Pipeline: ROI masking](./examples/writeup_roi_mask.png)
 
 After masking, an edge image is obtained by applying Canny edge detection, reducing the lane lines to thin lines for further processing.
 
-![Challenge input](./examples/writeup_edges_canny.png)
+![Pipeline: Canny edge detection](./examples/writeup_edges_canny.png)
 
 The edge image is now passed to a probabilistic Hough transform that detects line segments. A minimum line length is enforced and line
 segments in a valid distance are merged. Lines not agreeing with a valid range of slopes are discarded and the resulting lines are
 split by angle, extrapolated to a common length and averaged via their mean.
 
-![Challenge input](./examples/writeup_lines_hough.png)
+![Pipeline: Hough transform](./examples/writeup_lines_hough.png)
 
 Finally, the lines are overlaid on the original image, adding a lane marker and center.
 
-![Challenge input](./examples/writeup_lanes_final.png)
+![Pipeline: Line refinement](./examples/writeup_lanes_final.png)
+
+A video of the pipeline at work can be found [here](https://youtu.be/lw79wi2D53k).
 
 ## Shortcomings of the approach
 
