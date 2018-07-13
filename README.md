@@ -1,56 +1,86 @@
 # **Finding Lane Lines on the Road** 
+
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
+![Challenge input](./examples/lanelines_challenge.jpg)
 
-Overview
----
+## Overview
 
 When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
 
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+In this project we will detect lane lines in images using Python and OpenCV.
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+## The Project
 
-1. Describe the pipeline
+In order to create the environment required to reproduce the results of this notebook, an Anaconda/Conda environment file is given in `environment.yaml`.
+A Conda environment can then be set up using
 
-2. Identify any shortcomings
+```bash
+conda create env -f environment.yaml
+```
 
-3. Suggest possible improvements
+The notebook [P1.ipynb](P1.ipynb) can then be opened in Jupyter Notebook using
 
-We encourage using images in your writeup to demonstrate how your pipeline works.  
+```bash
+conda activate carnd-term1
+jupyter notebook P1.ipynb
+```
 
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
+## Project description
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
+As stated above, the goal of this project is to detect street lane lines in video camera images using traditional computer vision approaches.
+In order to achieve this goal, [the notebook ](P1.ipynb) a five step pipeline that is capable of
+detecting the left and right lane lines separately, whereby a lane line is either
 
+- yellow and solid,
+- white and solid or
+- white and dashed
 
-The Project
----
+In the first step, the the lane lines are segmented from the color image. To achieve this,
+the image is converted from RGB to [HSL](https://en.wikipedia.org/wiki/HSL_and_HSV) (hue, saturation and lightness) color space, since this allows addressing pixels by either their color or their brightness.
+To account for changes in illumination, the lightness channel is preprocessed using a adaptive histogram equalization ([CLAHE](https://en.wikipedia.org/wiki/Adaptive_histogram_equalization)), after which two
+separate masks for the yellow and white lines are generated and combined for the later stage.
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
+![Challenge input](./examples/writeup_thresh_yellow.png)
+![Challenge input](./examples/writeup_thresh_white.png)
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7) if you haven't already.
+After thresholding, a region of interest is masked out from the image by applying a trapezoid
+cut at the bottom half of the image. This follows the assumption that lane marks can always be found in the lower half
+of the image and follow a triangular shape with the tip close to the center of the image due to perspective.
+This assumption is somewhat limited in that steering action can (and will) break it, but it is an acceptable baseline to start with.
 
-**Step 2:** Open the code in a Jupyter Notebook
+![Challenge input](./examples/writeup_roi_mask.png)
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out <A HREF="https://www.packtpub.com/books/content/basics-jupyter-notebook-and-python" target="_blank">Cyrille Rossant's Basics of Jupyter Notebook and Python</A> to get started.
+After masking, an edge image is obtained by applying Canny edge detection, reducing the lane lines to thin lines for further processing.
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
+![Challenge input](./examples/writeup_edges_canny.png)
 
-`> jupyter notebook`
+The edge image is now passed to a probabilistic Hough transform that detects line segments. A minimum line length is enforced and line
+segments in a valid distance are merged. Lines not agreeing with a valid range of slopes are discarded and the resulting lines are
+split by angle, extrapolated to a common length and averaged via their mean.
 
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
+![Challenge input](./examples/writeup_lines_hough.png)
 
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
+Finally, the lines are overlaid on the original image, adding a lane marker and center.
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+![Challenge input](./examples/writeup_lanes_final.png)
+
+## Shortcomings of the approach
+
+This processing pipeline only addresses single images, i.e. does not take into account temporal and spatiotemporal correlations,
+and is engineered against a set of daylight images only. In order to test the validity of the approach, night images would have to
+be evaluated as well.
+
+Since the images are processed separately from each other even during processing of a video stream, massive jitter can occur
+due to the stochastic nature of the probabilistic Hough transform, noise, and changing lighting and contrast conditions. To accomodate,
+a low-level filter was added to the video processing part that effectively suppresses jumps between frames. This does come at its own
+cost, but seems to do reasonably well for the given test videos.
+
+While processing the challenge video, it was found that the "lightness" of the yellow lane lines is similar to that of the surrounding
+concrete in some situations. This led to the addition of a separate mask attentive to yellow features only, after which the challenge was
+easy to tackle. This does show the vulnerability of the whole approach quite well: Taking simple assumptions about the
+scenario may lead to unforeseeable failures when the implementation meets new environments.
+Since neither a measure for the accuracy of the algorithm nor ground truth information exist (as far as this project is concerned),
+an accurate measure of the algorithm's quality is impossible.
 
