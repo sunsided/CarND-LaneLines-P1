@@ -70,19 +70,27 @@ A video of the pipeline at work can be found [here](https://youtu.be/lw79wi2D53k
 
 ## Shortcomings of the approach
 
-This processing pipeline only addresses single images, i.e. does not take into account temporal and spatiotemporal correlations,
-and is engineered against a set of daylight images only. In order to test the validity of the approach, night images would have to
-be evaluated as well.
+This processing pipeline only addresses single images, i.e. does not take into account temporal and 
+spatiotemporal correlations, and is engineered against a set of daylight images only that taken with a specific camera.
+In order to test the validity of the approach, night images would have to be evaluated as well. 
+The parameters selected for this project are also implicitly related to the extrinsic and intrinsic 
+camera parameters. Especially the angle filtering, i.e. the part that discards unreasonable line angles, is 
+influenced by the camera's field of view. The image is also assumed to be undistorted, as otherwise straight
+(pysical) lines might not even be detected to begin with.
 
 Since the images are processed separately from each other even during processing of a video stream, massive jitter can occur
-due to the stochastic nature of the probabilistic Hough transform, noise, and changing lighting and contrast conditions. To accomodate,
-a low-level filter was added to the video processing part that effectively suppresses jumps between frames. This does come at its own
-cost, but seems to do reasonably well for the given test videos.
+due to the stochastic nature of the probabilistic Hough transform, noise, and changing lighting and contrast conditions.
+To accomodate, a low-level filter was added to the video processing part that effectively suppresses jumps between frames.
+This does come at its own cost, but seems to do reasonably well for the given test videos.  
+As far as tracking is concerned (rather than detection), it must be noted that the algorithm requires a clear view 
+at the lane lines in order to "known" them in the first place. Since no state is kept between frames (except for the 
+low-pass filter), missing or occluded lane lines result in loss of tracking.
 
-While processing the challenge video, it was found that the "lightness" of the yellow lane lines is similar to that of the surrounding
-concrete in some situations. This led to the addition of a separate mask attentive to yellow features only, after which the challenge was
-easy to tackle. This does show the vulnerability of the whole approach quite well: Taking simple assumptions about the
-scenario may lead to unforeseeable failures when the implementation meets new environments.
-Since neither a measure for the accuracy of the algorithm nor ground truth information exist (as far as this project is concerned),
-an accurate measure of the algorithm's quality is impossible.
+While processing the challenge video, it was found that the HSV value ("brightness") of the yellow lane lines is similar
+to that of the surrounding concrete in some situations. This led to the use of HSL color space and the addition of a
+separate mask attentive to yellow features only, after which the challenge was easy to tackle. 
+This does show the vulnerability of the whole approach quite well:  Taking simple assumptions about the scenario may
+lead to unforeseeable failures when the implementation meets new environments. Since neither a measure for the 
+accuracy of the algorithm nor ground truth information exist (as far as this project is concerned), 
+an accuratemeasure of the algorithm's quality is impossible.
 
