@@ -89,8 +89,7 @@ low-pass filter), missing or occluded lane lines result in loss of tracking.
 While processing the challenge video, it was found that the HSV value ("brightness") of the yellow lane lines is similar
 to that of the surrounding concrete in some situations. This led to the use of HSL color space and the addition of a
 separate mask attentive to yellow features only, after which the challenge was easy to tackle. 
-This does show the vulnerability of the whole approach quite well:  Taking simple assumptions about the scenario may
+This does show the vulnerability of the whole approach quite well: Taking simple assumptions about the scenario may
 lead to unforeseeable failures when the implementation meets new environments. Since neither a measure for the 
 accuracy of the algorithm nor ground truth information exist (as far as this project is concerned), 
-an accuratemeasure of the algorithm's quality is impossible.
-
+an accurate measure of the algorithm's quality is impossible, which makes it hard or even impossible to optimize.
